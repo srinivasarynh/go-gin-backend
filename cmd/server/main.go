@@ -32,7 +32,7 @@ func main() {
 		appLogger.Fatal("failed to connect to database", err)
 	}
 
-	if err := database.RunMigrations(cft.DatabaseURL); err != nil {
+	if err := database.RunMigrations(cfg.DatabaseURL); err != nil {
 		appLogger.Fatal("failed to run migrations", err)
 	}
 
@@ -57,30 +57,30 @@ func main() {
 	routes.SetupRoutes(r, authHandler, userHandler, healthHandler, authService)
 
 	srv := &http.Server{
-		Addr : ":" + cfg.Port,
+		Addr:    ":" + cfg.Port,
 		Handler: r,
 	}
 
-go func() {
-        appLogger.Info("Starting server on port " + cfg.Port)
-        if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-            appLogger.Fatal("Failed to start server", err)
-        }
-    }()
+	go func() {
+		appLogger.Info("Starting server on port " + cfg.Port)
+		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+			appLogger.Fatal("Failed to start server", err)
+		}
+	}()
 
-    // Graceful shutdown
-    quit := make(chan os.Signal, 1)
-    signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
-    <-quit
+	// Graceful shutdown
+	quit := make(chan os.Signal, 1)
+	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
+	<-quit
 
-    appLogger.Info("Shutting down server...")
+	appLogger.Info("Shutting down server...")
 
-    ctx, cancel := context.WithTimeout(context.Background(), 30* time.Second)
-    defer cancel()
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
 
-    if err := srv.Shutdown(ctx); err != nil {
-        appLogger.Fatal("Server forced to shutdown", err)
-    }
+	if err := srv.Shutdown(ctx); err != nil {
+		appLogger.Fatal("Server forced to shutdown", err)
+	}
 
-    appLogger.Info("Server exited")
+	appLogger.Info("Server exited")
 }
